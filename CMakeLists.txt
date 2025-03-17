@@ -40,10 +40,10 @@ knowhere_option(WITH_PROFILER "Build with profiler" OFF)
 knowhere_option(WITH_FAISS_TESTS "Build with Faiss unit tests" OFF)
 knowhere_option(WITH_LIGHT "Build with light weight version" OFF)
 
+
 # cardinal is an enterprise vector search engine and can only be enabled for
 # cloud environment
 knowhere_option(WITH_CARDINAL "Build with cardinal" OFF)
-
 # this is needed for clang on ubuntu:20.04, otherwise the linked fails with
 # 'undefined reference' error. fmt v9 was used by the time the error was
 # encountered. clang on ubuntu:22.04 seems to be unaffected. gcc seems to be

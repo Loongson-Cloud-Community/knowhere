@@ -30,6 +30,10 @@
 #endif
 
 #include "distances_ref.h"
+
+#if defined(__loongarch64)
+#include "distances_lsx.h"
+#endif
 #include "knowhere/log.h"
 namespace faiss {
 
@@ -41,6 +45,7 @@ bool use_sse4_2 = true;
 
 bool support_pq_fast_scan = true;
 
+#if defined(__powerpc64__)
 decltype(fvec_inner_product) fvec_inner_product = fvec_inner_product_ref;
 decltype(fvec_L2sqr) fvec_L2sqr = fvec_L2sqr_ref;
 decltype(fvec_L1) fvec_L1 = fvec_L1_ref;
@@ -61,6 +66,31 @@ decltype(fvec_L2sqr_batch_4) fvec_L2sqr_batch_4 = fvec_L2sqr_batch_4_ref;
 
 decltype(ivec_inner_product) ivec_inner_product = ivec_inner_product_ref;
 decltype(ivec_L2sqr) ivec_L2sqr = ivec_L2sqr_ref;
+#endif
+
+#if defined(__loongarch64)
+//ADD loongarch define
+decltype(fvec_inner_product) fvec_inner_product = fvec_inner_product_lsx;
+decltype(fvec_L2sqr) fvec_L2sqr = fvec_L2sqr_lsx;
+decltype(fvec_L1) fvec_L1 = fvec_L1_lsx;
+decltype(fvec_Linf) fvec_Linf = fvec_Linf_lsx;
+decltype(fvec_norm_L2sqr) fvec_norm_L2sqr = fvec_norm_L2sqr_lsx;
+decltype(fvec_L2sqr_ny) fvec_L2sqr_ny = fvec_L2sqr_ny_lsx;
+decltype(fvec_inner_products_ny) fvec_inner_products_ny = fvec_inner_products_ny_lsx;
+decltype(fvec_madd) fvec_madd = fvec_madd_lsx;
+decltype(fvec_madd_and_argmin) fvec_madd_and_argmin = fvec_madd_and_argmin_lsx;
+
+decltype(fvec_L2sqr_ny_nearest) fvec_L2sqr_ny_nearest = fvec_L2sqr_ny_nearest_lsx;
+decltype(fvec_L2sqr_ny_nearest_y_transposed) fvec_L2sqr_ny_nearest_y_transposed =
+    fvec_L2sqr_ny_nearest_y_transposed_lsx;
+decltype(fvec_L2sqr_ny_transposed) fvec_L2sqr_ny_transposed = fvec_L2sqr_ny_transposed_lsx;
+
+decltype(fvec_inner_product_batch_4) fvec_inner_product_batch_4 = fvec_inner_product_batch_4_lsx;
+decltype(fvec_L2sqr_batch_4) fvec_L2sqr_batch_4 = fvec_L2sqr_batch_4_lsx;
+
+decltype(ivec_inner_product) ivec_inner_product = ivec_inner_product_lsx;
+decltype(ivec_L2sqr) ivec_L2sqr = ivec_L2sqr_lsx;
+#endif
 
 #if defined(__x86_64__)
 bool
@@ -209,7 +239,30 @@ fvec_hook(std::string& simd_type) {
     simd_type = "GENERIC";
     support_pq_fast_scan = false;
 #endif
+
+// ToDo MG: include LSX intrinsics via distances_lsx once _ref tests succeed
+#if defined(__loongarch64)
+    fvec_inner_product = fvec_inner_product_lsx;
+    fvec_L2sqr = fvec_L2sqr_lsx;
+    fvec_L1 = fvec_L1_lsx;
+    fvec_Linf = fvec_Linf_lsx;
+
+    fvec_norm_L2sqr = fvec_norm_L2sqr_lsx;
+    fvec_L2sqr_ny = fvec_L2sqr_ny_lsx;
+    fvec_inner_products_ny = fvec_inner_products_ny_lsx;
+    fvec_madd = fvec_madd_lsx;
+    fvec_madd_and_argmin = fvec_madd_and_argmin_lsx;
+
+    ivec_inner_product = ivec_inner_product_lsx;
+    ivec_L2sqr = ivec_L2sqr_lsx;
+
+    simd_type = "GENERIC";
+    support_pq_fast_scan = false;
+#endif
+
 }
+
+
 
 static int init_hook_ = []() {
     std::string simd_type;

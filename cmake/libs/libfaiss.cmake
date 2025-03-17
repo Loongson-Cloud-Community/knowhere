@@ -59,6 +59,13 @@ if(__PPC64)
   target_link_libraries(knowhere_utils PUBLIC glog::glog)
 endif()
 
+# ToDo: Add distances_lsx.cc for loongarch64 SIMD acceleration
+if(__LOONGARCH64)
+  set(UTILS_SRC src/simd/hook.cc src/simd/distances_lsx.cc)
+  add_library(knowhere_utils STATIC ${UTILS_SRC})
+  target_link_libraries(knowhere_utils PUBLIC glog::glog)
+endif()
+
 if(LINUX)
   set(BLA_VENDOR OpenBLAS)
 endif()
@@ -143,6 +150,29 @@ if(__PPC64)
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:
             -mcpu=native
             -mvsx
+            -Wno-sign-compare
+            -Wno-unused-variable
+            -Wno-reorder
+            -Wno-unused-local-typedefs
+            -Wno-unused-function
+            -Wno-strict-aliasing>)
+
+  add_dependencies(faiss knowhere_utils)
+  target_link_libraries(faiss PUBLIC OpenMP::OpenMP_CXX ${BLAS_LIBRARIES}
+                                     ${LAPACK_LIBRARIES} knowhere_utils)
+  target_compile_definitions(faiss PRIVATE FINTEGER=int)
+endif()
+
+if(__LOONGARCH64)
+  knowhere_file_glob(GLOB FAISS_AVX_SRCS thirdparty/faiss/faiss/impl/*avx.cpp)
+
+  list(REMOVE_ITEM FAISS_SRCS ${FAISS_AVX_SRCS})
+  add_library(faiss STATIC ${FAISS_SRCS})
+
+  target_compile_options(
+    faiss
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:
+            -mlsx
             -Wno-sign-compare
             -Wno-unused-variable
             -Wno-reorder
